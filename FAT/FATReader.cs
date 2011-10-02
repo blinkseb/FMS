@@ -4,9 +4,6 @@ using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.IO;
 using FMS.FAT.Implementation;
-using System.Threading;
-using System.Text;
-using System.Management;
 
 namespace FMS.FAT
 {

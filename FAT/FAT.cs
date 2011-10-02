@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
@@ -219,20 +218,6 @@ namespace FMS.FAT
 
       compare = 0;
       return false;
-    }
-  }
-
-  public class FATComparer : IComparer<FATDirectoryEntry>
-  {
-    public int Compare(FATDirectoryEntry x, FATDirectoryEntry y)
-    {
-      unsafe
-      {
-        string xName = Utils.ByteToString(x.DIR_Name, 11);
-        string yName = Utils.ByteToString(y.DIR_Name, 11);
-
-        return xName.CompareTo(yName);
-      }
     }
   }
   

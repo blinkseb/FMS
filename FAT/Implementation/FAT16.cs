@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -10,7 +8,6 @@ namespace FMS.FAT.Implementation
   class FAT16: FAT
   {
     private FAT16ExtBS fat16ExtBS;
-    private List<FATLongDirectoryEntry> longDirectoryBuffer;
 
     public FAT16(string drive, FATBS bootSector, FAT16ExtBS extSector, BinaryReader reader, Stream stream, ILogger logger)
       : base(drive, bootSector, reader, stream, logger)
