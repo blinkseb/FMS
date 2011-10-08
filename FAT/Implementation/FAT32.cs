@@ -27,6 +27,11 @@ namespace FMS.FAT.Implementation
       rootDirectory.children = ReadStructure(fat32ExtBS.root_cluster, rootDirectory);
     }
 
+    public override ulong GetRootDirectorySector()
+    {
+      return ((fat32ExtBS.root_cluster - 2) * bootSector.sectors_per_cluster) + firstDataSector;
+    }
+
     protected override uint GetFATEntrySize()
     {
       return 4;

@@ -128,6 +128,24 @@ namespace FMS.FAT
       else
         name = filename + "." + extension;
     }
+
+    internal byte[] ToByte()
+    {
+      List<byte> datas = new List<byte>();
+      if (longNameEntries != null)
+      {
+        foreach (var entry in longNameEntries)
+        {
+          byte[] data = Utils.TypeToByte<FATLongDirectoryEntry>(entry);
+          datas.AddRange(data);
+        }
+      }
+
+      byte[] entryData = Utils.TypeToByte<FATDirectoryEntry>(this.entry);
+      datas.AddRange(entryData);
+
+      return datas.ToArray();
+    }
   }
 
   public class File : FileBase
@@ -228,14 +246,34 @@ namespace FMS.FAT
       compare = 0;
       return false;
     }
+
+    internal void Write(Dictionary<int, byte[]> datas)
+    {
+      if (children == null)
+        return;
+
+      List<byte> folderData = new List<byte>();
+      foreach (FileBase file in children)
+      {
+        folderData.AddRange(file.ToByte());
+        if (file is Directory)
+          (file as Directory).Write(datas);
+      }
+
+      folderData.Add(0);
+      datas.Add((int) firstCluster, folderData.ToArray());
+    }
   }
   
   abstract class FAT
   {
+    private List<FATLongDirectoryEntry> longDirectoryBuffer;
+
     protected FATBS bootSector;
     protected BinaryReader reader;
     protected Stream stream;
     protected ILogger logger;
+    protected Directory rootDirectory;
 
     public ulong rootDirSectors;
     public ulong firstDataSector;
@@ -253,8 +291,6 @@ namespace FMS.FAT
         return rootDirectory;
       }
     }
-    protected Directory rootDirectory;
-    private List<FATLongDirectoryEntry> longDirectoryBuffer;
 
     public FAT(string drive, FATBS bootSector, BinaryReader reader, Stream stream, ILogger logger)
     {
@@ -268,6 +304,29 @@ namespace FMS.FAT
       };
     }
 
+    public abstract void ReadRootDirectory();
+    public abstract uint ReadFATEntry(FATPosition position);
+    public abstract Boolean IsEOCFatEntry(uint entry);
+    public abstract ulong GetRootDirectorySector();
+
+    public FATPosition GetFATPositionForCluster(uint cluster)
+    {
+      uint fatOffset = GetFATEntrySize() * cluster;
+
+      FATPosition position = new FATPosition();
+      position.sector = bootSector.reserved_sector_count + (fatOffset / bootSector.bytes_per_sector);
+      position.sector_offset = fatOffset % bootSector.bytes_per_sector;
+
+      return position;
+    }
+
+    public void Sort(DiskStructure diskStructure)
+    {
+      rootDirectory.Sort(diskStructure);
+    }
+
+    protected abstract uint GetFATEntrySize();
+
     protected uint GetClusterSize()
     {
       return (uint) bootSector.sectors_per_cluster * bootSector.bytes_per_sector;
@@ -280,9 +339,14 @@ namespace FMS.FAT
       return reader.ReadBytes((int) GetClusterSize());
     }
 
+    protected ulong GetSectorForCluster(uint cluster)
+    {
+      return ((cluster - 2) * bootSector.sectors_per_cluster) + firstDataSector;
+    }
+
     protected void SeekToCluster(uint cluster)
     {
-      ulong firstSector = ((cluster - 2) * bootSector.sectors_per_cluster) + firstDataSector;
+      ulong firstSector = GetSectorForCluster(cluster);
       stream.Seek((long) (mbrOffsetInByte + firstSector * bootSector.bytes_per_sector), SeekOrigin.Begin);
     }
 
@@ -304,23 +368,7 @@ namespace FMS.FAT
     protected bool IsValidDirectoryEntry(byte flag)
     {
       return !IsDirectoryFree(flag) && !IsDirectoryEOF(flag);
-    }
-
-    public abstract void ReadRootDirectory();
-    public FATPosition GetFATPositionForCluster(uint cluster)
-    {
-      uint fatOffset = GetFATEntrySize() * cluster;
-
-      FATPosition position = new FATPosition();
-      position.sector = bootSector.reserved_sector_count + (fatOffset / bootSector.bytes_per_sector);
-      position.sector_offset = fatOffset % bootSector.bytes_per_sector;
-
-      return position;
-    }
-    public abstract uint ReadFATEntry(FATPosition position);
-    public abstract Boolean IsEOCFatEntry(uint entry);
-
-    protected abstract uint GetFATEntrySize();
+    }   
 
     protected List<FileBase> ReadStructure(uint cluster, Directory parent, bool recursive = true)
     {
@@ -456,39 +504,43 @@ namespace FMS.FAT
       Debug.WriteLine("File content:\n{0}", new object[] { Utils.HexDump(data) });
     }
 
-    protected void WriteDirectories(uint cluster, ICollection<FATDirectoryEntry> directories)
+    public void WriteFAT()
     {
-      using (MemoryStream memoryStream = new MemoryStream())
-      {
-        using (BinaryWriter writer = new BinaryWriter(memoryStream))
-        {
-          foreach (var directory in directories)
-          {
-            byte[] bytes = Utils.TypeToByte<FATDirectoryEntry>(directory);
-            writer.Write(bytes);
-          }
-          writer.Write((byte)0);
+      Dictionary<int, byte[]> datas = new Dictionary<int, byte[]>();
+      Root.Write(datas);
 
-          long toPad = bootSector.bytes_per_sector - memoryStream.Length % bootSector.bytes_per_sector;
-          if (toPad > 0)
-            writer.Write(new byte[toPad]);
-
-          Debug.Assert(memoryStream.Length % bootSector.bytes_per_sector == 0);
-
-          BinaryReader memoryReader = new BinaryReader(memoryStream);
-          memoryStream.Seek(0, SeekOrigin.Begin);
-
-          SeekToCluster(cluster);
-          BinaryWriter diskWriter = new BinaryWriter(stream);
-          diskWriter.Write(memoryReader.ReadBytes((int)memoryStream.Length));
-          diskWriter.Flush();
-        }
-      }
+      Write(datas);
     }
 
-    public void Sort(DiskStructure diskStructure)
+    private void Write(Dictionary<int, byte[]> datas)
     {
-      rootDirectory.Sort(diskStructure);
+      BinaryWriter diskWriter = new BinaryWriter(stream);
+
+      foreach (var data in datas)
+      {
+        byte[] d = data.Value;
+        Utils.Pad(ref d, bootSector.bytes_per_sector);
+        Debug.Assert(d.Length % bootSector.bytes_per_sector == 0);
+
+        int position = data.Key;
+        if (position == 0)
+          position = (int)GetRootDirectorySector();
+        else
+          position = (int)GetSectorForCluster((uint) position);
+
+        position *= bootSector.bytes_per_sector;
+
+        diskWriter.Seek(position, SeekOrigin.Begin);
+
+        //TODO: Handle multiple cluster!
+        if (d.Length > GetClusterSize())
+          throw new InvalidOperationException();
+
+        //WRITE
+        diskWriter.Write(d);
+      }
+
+      diskWriter.Flush();
     }
   }
 

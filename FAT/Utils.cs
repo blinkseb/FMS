@@ -197,6 +197,19 @@ namespace FMS.FAT
           DumpStructure(((FMS.FAT.Directory)file).children, logger, level + 1);
       }
     }
+
+    public static void Pad(BinaryWriter stream, uint padding_size)
+    {
+      long toPad = padding_size - stream.BaseStream.Length % padding_size;
+      if (toPad > 0)
+        stream.Write(new byte[toPad]);
+    }
+
+    public static void Pad(ref byte[] data, int padding_size)
+    {
+      int toPad = padding_size - data.Length % padding_size;
+      Array.Resize<byte>(ref data, data.Length + toPad);
+    }
   }
 
   public static class ExtensionMethods

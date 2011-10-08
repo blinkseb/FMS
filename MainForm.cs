@@ -64,11 +64,13 @@ namespace FMS
         tagDiskStructure.Sort();
 
         fatReader = new FAT.FATReader(txtFolder.Text, logger);
-        fatReader.Open(FileAccess.Read);
+        fatReader.Open(FileAccess.ReadWrite);
         fatReader.DumpFAT();
 
         fatReader.Sort(tagDiskStructure);
         fatReader.DumpFAT();
+
+        fatReader.WriteFAT();
       }
       finally
       {

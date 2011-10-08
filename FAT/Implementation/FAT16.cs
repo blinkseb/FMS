@@ -24,9 +24,14 @@ namespace FMS.FAT.Implementation
       this.fat16ExtBS = extSector;
     }
 
+    public override ulong GetRootDirectorySector()
+    {
+      return (ulong)(bootSector.reserved_sector_count + (bootSector.table_count * bootSector.table_size_16));
+    }
+
     public override void ReadRootDirectory()
     {
-      ulong firstRootDirSector = (ulong) (bootSector.reserved_sector_count + (bootSector.table_count * bootSector.table_size_16)) * bootSector.bytes_per_sector;
+      ulong firstRootDirSector = GetRootDirectorySector() * bootSector.bytes_per_sector;
       stream.Seek((long) firstRootDirSector, SeekOrigin.Begin);
 
       uint sizeOfRootDirectory = (uint) (bootSector.root_entry_count * Marshal.SizeOf(typeof(FATDirectoryEntry)));

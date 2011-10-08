@@ -171,8 +171,6 @@ namespace FMS.FAT
           logger.Log("Reading done.");
         }
       }
-
-      mDiskHandle.Close();
     }
 
     public void Close()
@@ -193,6 +191,12 @@ namespace FMS.FAT
     {
       if (fatImplementation != null)
         Utils.DumpStructure(fatImplementation.Root.children, logger);
+    }
+
+    public void WriteFAT()
+    {
+      if (fatImplementation != null)
+        fatImplementation.WriteFAT();
     }
   }
 }
