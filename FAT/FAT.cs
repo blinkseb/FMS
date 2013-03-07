@@ -60,14 +60,14 @@ namespace FMS.FAT
       }
 
       byte chksum = ComputeChecksum();
-      foreach (var entry in entries)
+      /*foreach (var entry in entries)
       {
         if (entry.LDIR_Chksum != chksum)
         {
           FormatName();
           return;
         }
-      }
+      }*/
 
       longNameEntries = entries;
       name = "";
@@ -107,15 +107,12 @@ namespace FMS.FAT
     private byte ComputeChecksum()
     {
       byte chksum = 0;
-      for (short i = 0; i < 11; i++)
+      for (byte i = 0; i < 11; i++)
       {
-        byte oldChksum = chksum;
-        chksum = (byte)(((chksum & (byte)1) != 0) ? (byte)0x80 : (byte)0);
-        chksum += (byte)(oldChksum >> 1);
-        chksum += (byte)name[i];
+        chksum = (byte) ((byte) ((((chksum & 1) << 7)) | (((chksum & 0xfe) >> 1))) + (byte)name[i]);
       }
 
-      return (byte)chksum;
+      return chksum;
     }
 
     private void FormatName()
@@ -247,7 +244,7 @@ namespace FMS.FAT
       return false;
     }
 
-    internal void Write(Dictionary<int, byte[]> datas)
+    internal void Write(Dictionary<uint, byte[]> datas)
     {
       if (children == null)
         return;
@@ -261,7 +258,7 @@ namespace FMS.FAT
       }
 
       folderData.Add(0);
-      datas.Add((int) firstCluster, folderData.ToArray());
+      datas.Add(firstCluster, folderData.ToArray());
     }
   }
   
@@ -506,13 +503,13 @@ namespace FMS.FAT
 
     public void WriteFAT()
     {
-      Dictionary<int, byte[]> datas = new Dictionary<int, byte[]>();
+      Dictionary<uint, byte[]> datas = new Dictionary<uint, byte[]>();
       Root.Write(datas);
 
       Write(datas);
     }
 
-    private void Write(Dictionary<int, byte[]> datas)
+    private void Write(Dictionary<uint, byte[]> datas)
     {
       BinaryWriter diskWriter = new BinaryWriter(stream);
 
@@ -522,7 +519,7 @@ namespace FMS.FAT
         Utils.Pad(ref d, bootSector.bytes_per_sector);
         Debug.Assert(d.Length % bootSector.bytes_per_sector == 0);
 
-        int position = data.Key;
+        long position = data.Key;
         if (position == 0)
           position = (int)GetRootDirectorySector();
         else
@@ -530,7 +527,8 @@ namespace FMS.FAT
 
         position *= bootSector.bytes_per_sector;
 
-        diskWriter.Seek(position, SeekOrigin.Begin);
+        //diskWriter.Seek(position, SeekOrigin.Begin);
+        diskWriter.BaseStream.Seek(position, SeekOrigin.Begin);
 
         //TODO: Handle multiple cluster!
         if (d.Length > GetClusterSize())
@@ -538,6 +536,7 @@ namespace FMS.FAT
 
         //WRITE
         diskWriter.Write(d);
+        diskWriter.Flush();
       }
 
       diskWriter.Flush();
