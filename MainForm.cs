@@ -30,8 +30,7 @@ namespace FMS
 
     private void txtFolder_TextChanged(object sender, EventArgs e)
     {
-      btnDump.Enabled = btnDumpAndSort.Enabled = System.IO.Directory.Exists(((TextBox)sender).Text);
-      btnStart.Enabled = false;
+      btnDump.Enabled = btnDumpAndSort.Enabled = writeFat.Enabled = System.IO.Directory.Exists(((TextBox)sender).Text);
     }
 
     private void btnStart_Click(object sender, EventArgs e)
@@ -54,7 +53,7 @@ namespace FMS
       }
     }
 
-    private void button2_Click(object sender, EventArgs e)
+    private void writeFat_Click(object sender, EventArgs e)
     {
       FAT.FATReader fatReader = null;
       DiskStructure tagDiskStructure = null;
@@ -65,12 +64,32 @@ namespace FMS
 
         fatReader = new FAT.FATReader(txtFolder.Text, logger);
         fatReader.Open(FileAccess.ReadWrite);
-        fatReader.DumpFAT();
 
         fatReader.Sort(tagDiskStructure);
         fatReader.DumpFAT();
 
         fatReader.WriteFAT();
+      }
+      finally
+      {
+        if (fatReader != null)
+          fatReader.Close();
+      }
+    }
+
+    private void btnDumpAndSort_Click(object sender, EventArgs e)
+    {
+      FAT.FATReader fatReader = null;
+      DiskStructure tagDiskStructure = null;
+      try
+      {
+        tagDiskStructure = new DiskStructure(txtFolder.Text);
+        tagDiskStructure.Sort();
+
+        fatReader = new FAT.FATReader(txtFolder.Text, logger);
+        fatReader.Open(FileAccess.Read);
+        fatReader.Sort(tagDiskStructure);
+        fatReader.DumpFAT();
       }
       finally
       {

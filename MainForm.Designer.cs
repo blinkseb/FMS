@@ -31,10 +31,10 @@
       this.txtFolder = new System.Windows.Forms.TextBox();
       this.button1 = new System.Windows.Forms.Button();
       this.folderBrowser = new System.Windows.Forms.FolderBrowserDialog();
-      this.btnStart = new System.Windows.Forms.Button();
       this.txtLog = new System.Windows.Forms.TextBox();
       this.btnDump = new System.Windows.Forms.Button();
       this.btnDumpAndSort = new System.Windows.Forms.Button();
+      this.writeFat = new System.Windows.Forms.Button();
       this.SuspendLayout();
       // 
       // txtFolder
@@ -43,14 +43,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
       this.txtFolder.Location = new System.Drawing.Point(12, 12);
       this.txtFolder.Name = "txtFolder";
-      this.txtFolder.Size = new System.Drawing.Size(700, 20);
+      this.txtFolder.Size = new System.Drawing.Size(750, 20);
       this.txtFolder.TabIndex = 0;
       this.txtFolder.TextChanged += new System.EventHandler(this.txtFolder_TextChanged);
       // 
       // button1
       // 
       this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.button1.Location = new System.Drawing.Point(718, 10);
+      this.button1.Location = new System.Drawing.Point(768, 10);
       this.button1.Name = "button1";
       this.button1.Size = new System.Drawing.Size(61, 23);
       this.button1.TabIndex = 1;
@@ -63,18 +63,6 @@
       this.folderBrowser.RootFolder = System.Environment.SpecialFolder.MyComputer;
       this.folderBrowser.ShowNewFolderButton = false;
       // 
-      // btnStart
-      // 
-      this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.btnStart.Enabled = false;
-      this.btnStart.Location = new System.Drawing.Point(785, 9);
-      this.btnStart.Name = "btnStart";
-      this.btnStart.Size = new System.Drawing.Size(56, 24);
-      this.btnStart.TabIndex = 2;
-      this.btnStart.Text = "Start";
-      this.btnStart.UseVisualStyleBackColor = true;
-      this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
-      // 
       // txtLog
       // 
       this.txtLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -86,7 +74,7 @@
       this.txtLog.Name = "txtLog";
       this.txtLog.ReadOnly = true;
       this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-      this.txtLog.Size = new System.Drawing.Size(829, 352);
+      this.txtLog.Size = new System.Drawing.Size(817, 352);
       this.txtLog.TabIndex = 3;
       // 
       // btnDump
@@ -109,17 +97,29 @@
       this.btnDumpAndSort.TabIndex = 5;
       this.btnDumpAndSort.Text = "Dump sorted FAT";
       this.btnDumpAndSort.UseVisualStyleBackColor = true;
-      this.btnDumpAndSort.Click += new System.EventHandler(this.button2_Click);
+      this.btnDumpAndSort.Click += new System.EventHandler(this.btnDumpAndSort_Click);
+      // 
+      // writeFat
+      // 
+      this.writeFat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+      this.writeFat.Enabled = false;
+      this.writeFat.Location = new System.Drawing.Point(648, 32);
+      this.writeFat.Name = "writeFat";
+      this.writeFat.Size = new System.Drawing.Size(114, 24);
+      this.writeFat.TabIndex = 6;
+      this.writeFat.Text = "Write sorted FAT";
+      this.writeFat.UseVisualStyleBackColor = true;
+      this.writeFat.Click += new System.EventHandler(this.writeFat_Click);
       // 
       // MainForm
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(853, 426);
+      this.ClientSize = new System.Drawing.Size(841, 426);
+      this.Controls.Add(this.writeFat);
       this.Controls.Add(this.btnDumpAndSort);
       this.Controls.Add(this.btnDump);
       this.Controls.Add(this.txtLog);
-      this.Controls.Add(this.btnStart);
       this.Controls.Add(this.button1);
       this.Controls.Add(this.txtFolder);
       this.MaximizeBox = false;
@@ -136,10 +136,10 @@
         private System.Windows.Forms.TextBox txtFolder;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.FolderBrowserDialog folderBrowser;
-        private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.TextBox txtLog;
         private System.Windows.Forms.Button btnDump;
         private System.Windows.Forms.Button btnDumpAndSort;
+        private System.Windows.Forms.Button writeFat;
 
     }
 }
