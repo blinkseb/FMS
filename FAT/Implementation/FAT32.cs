@@ -46,7 +46,7 @@ namespace FMS.FAT.Implementation
 
     public override bool IsEOCFatEntry(uint entry)
     {
-      return entry > 0x0FFFFFF8;
+      return entry >= 0x0FFFFFF8;
     }
   }
 }

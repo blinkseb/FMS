@@ -143,7 +143,7 @@ namespace FMS.FAT
             type = Type.FAT32;
 
           if (type == Type.FAT12)
-            throw new NotSupportedException("FAT16 is not supported");
+            throw new NotSupportedException("FAT12 is not supported");
 
           logger.Log("Detected new partition: {0}", new object[] { type });
 
